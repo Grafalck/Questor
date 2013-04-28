@@ -38,6 +38,7 @@ namespace Questor.Modules.Lookup
         public Settings()
         {
             Ammo = new List<Ammo>();
+            MiningCrystals = new List<MiningCrystals>();
             ItemsBlackList = new List<int>();
             WreckBlackList = new List<int>();
             AgentsList = new List<AgentsList>();
@@ -232,6 +233,7 @@ namespace Questor.Modules.Lookup
         public string SalvageShipName { get; set; }
         public string TransportShipName { get; set; }
         public string TravelShipName { get; set; }
+        public string MiningShipName { get; set; }
 
         //
         //Use Homebookmark
@@ -376,6 +378,7 @@ namespace Questor.Modules.Lookup
         public int MaximumLowValueTargets { get; set; }
         public int MinimumAmmoCharges { get; set; }
         public List<Ammo> Ammo { get; private set; }
+        public List<MiningCrystals> MiningCrystals { get; private set; }
 
         public int DoNotSwitchTargetsIfTargetHasMoreThanThisArmorDamagePercentage { get; set; }
 
@@ -823,6 +826,7 @@ namespace Questor.Modules.Lookup
                 SalvageShipName = "Noctis";
                 TransportShipName = "Transport";
                 TravelShipName = "Travel";
+                MiningShipName = "Hulk";
 
                 //
                 // Usage of Homebookmark @ dedicated salvager
@@ -1323,6 +1327,7 @@ namespace Questor.Modules.Lookup
                         SalvageShipName = (string)CharacterSettingsXml.Element("salvageShipName") ?? (string)CommonSettingsXml.Element("salvageShipName") ?? "My Destroyer of salvage";
                         TransportShipName = (string)CharacterSettingsXml.Element("transportShipName") ?? (string)CommonSettingsXml.Element("transportShipName") ?? "My Hauler of transportation";
                         TravelShipName = (string)CharacterSettingsXml.Element("travelShipName") ?? (string)CommonSettingsXml.Element("travelShipName") ?? "My Shuttle of traveling";
+                        MiningShipName = (string)CharacterSettingsXml.Element("miningShipName") ?? (string)CommonSettingsXml.Element("miningShipName") ?? "My Miner of mining";
                     }
                     catch (Exception exception)
                     {

@@ -546,6 +546,51 @@ namespace Questor.Modules.Caching
         /// <summary>
         ///   Returns the maximum weapon distance
         /// </summary>
+        public int OreToMine
+        {
+            get
+            {
+                // Get miningCrystals based on configured oretypes 
+                IEnumerable<MiningCrystals> _miningCrystals = Settings.Instance.MiningCrystals.Where(a => a.OreType).ToList();
+
+                try
+                {
+                    // Is our ship's cargo available?
+                    if ((Cache.Instance.CargoHold != null) && (Cache.Instance.CargoHold.IsValid))
+                    {
+                        ammo = ammo.Where(a => Cache.Instance.CargoHold.Items.Any(i => a.TypeId == i.TypeId && i.Quantity >= Settings.Instance.MinimumAmmoCharges));
+                    }
+                    else
+                    {
+                        return System.Convert.ToInt32(Cache.Instance.DirectEve.ActiveShip.MaxTargetRange);
+                    }
+
+                    // Return ship range if there's no ammo left
+                    if (!ammo.Any())
+                    {
+                        return System.Convert.ToInt32(Cache.Instance.DirectEve.ActiveShip.MaxTargetRange);
+                    }
+
+                    return ammo.Max(a => a.Range);
+                }
+                catch (Exception ex)
+                {
+                    if (Settings.Instance.DebugExceptions) Logging.Log("Cache.WeaponRange", "exception was:" + ex.Message, Logging.Teal);
+
+                    // Return max range
+                    if (Cache.Instance.DirectEve.ActiveShip != null)
+                    {
+                        return System.Convert.ToInt32(Cache.Instance.DirectEve.ActiveShip.MaxTargetRange);
+                    }
+
+                    return 0;
+                }
+            }
+        }
+
+        /// <summary>
+        ///   Returns the maximum weapon distance
+        /// </summary>
         public int WeaponRange
         {
             get
