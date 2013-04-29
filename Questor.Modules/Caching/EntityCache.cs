@@ -655,6 +655,7 @@ namespace Questor.Modules.Caching
                 result |= GroupId == (int)Group.mission_generic_frigates;
                 result |= GroupId == (int)Group.mission_thukker_frigate;
                 result |= GroupId == (int)Group.asteroid_rouge_drone_commander_frigate;
+                result |= Name.Contains("Spider Drone"); //we *really* need to find out the GroupID of this one. 
                 return result;
             }
         }
@@ -1058,12 +1059,71 @@ namespace Questor.Modules.Caching
             }
         }
 
+        public bool IsCelestial
+        {
+            get
+            {
+                bool result = false;
+                result |= CategoryId == (int) CategoryID.Celestial;
+                result |= CategoryId == (int) CategoryID.Station;
+                result |= GroupId == (int) Group.Moon;
+                result |= GroupId == (int) Group.AsteroidBelt;
+                return result;
+            }
+        }
+
+        public bool IsAsteroidBelt
+        {
+            get
+            {
+                bool result = false;
+                result |= GroupId == (int)Group.AsteroidBelt;
+                return result;
+            }
+        }
+
+        public bool IsPlanet
+        {
+            get
+            {
+                bool result = false;
+                result |= GroupId == (int)Group.Planet;
+                return result;
+            }
+        }
+
+        public bool IsMoon
+        {
+            get
+            {
+                bool result = false;
+                result |= GroupId == (int)Group.Moon;
+                return result;
+            }
+        }
+
+        public bool IsAsteroid
+        {
+            get
+            {
+                bool result = false;
+                result |= CategoryId == (int)CategoryID.Asteroid;
+                return result;
+            }
+        }
+
         public bool LockTarget()
         {
             // If the bad idea is attacking, attack back
             if (IsBadIdea && !IsAttacking)
             {
                 Logging.Log("EntityCache", "Attempting to target a player or concord entity! [" + Name + "]", Logging.White);
+                return false;
+            }
+
+            if (Distance >= 250001) //250k is the MAX targeting range in eve. 
+            {
+                Logging.Log("EntityCache", "We tried to lock [" + Name + "] which is [" + Math.Round(Distance / 1000,2) + "k] away. Do not try to lock things that you cant possibly target", Logging.Debug);
                 return false;
             }
 
@@ -1099,10 +1159,16 @@ namespace Questor.Modules.Caching
         {
             if (_directEntity != null)
             {
+                //if (Distance > 250001)
+                //{
+                //    return false;
+                //}
+
                 Cache.Instance.TargetingIDs.Remove(Id);
                 _directEntity.UnlockTarget();
                 return true;
             }
+
             return false;
         }
 
