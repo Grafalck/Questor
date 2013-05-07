@@ -1302,6 +1302,8 @@ namespace Questor.Modules.Combat
                         //
                         if (Cache.Instance.Targets.Any()) //weapontarget can be null, we might not yet be shooting anything. 
                         {
+                            if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "if (Cache.Instance.Targets.Any()) //weapontarget can be null, we might not yet be shooting anything.", Logging.Debug);
+
                             //
                             // run GetBestTarget here (every x seconds), GetBestTarget also runs in CombatMissionCtrl (but only once per tick, total)
                             //
@@ -1310,20 +1312,38 @@ namespace Questor.Modules.Combat
                             // GetBestTarget sets Cache.Instance.PreferredPrimaryWeaponTarget (or for drones in drone.cs: Cache.Instance.PreferredPrimaryWeaponTarget) 
                             //
                             
-                            if (Cache.Instance.PreferredPrimaryWeaponTarget != null
-                                && Cache.Instance.PreferredPrimaryWeaponTarget.Distance < Cache.Instance.MaxRange
-                                && Cache.Instance.PreferredPrimaryWeaponTarget.IsTarget)
+                            if (Cache.Instance.PreferredPrimaryWeaponTarget != null)
                             {
-                                if (Settings.Instance.DebugGetBestTarget) Logging.Log("Combat.KillTargets", "Activating Painters", Logging.Debug);
-                                ActivateTargetPainters(Cache.Instance.PreferredPrimaryWeaponTarget);
-                                if (Settings.Instance.DebugGetBestTarget) Logging.Log("Combat.KillTargets", "Activating Webs", Logging.Debug);
-                                ActivateStasisWeb(Cache.Instance.PreferredPrimaryWeaponTarget);
-                                if (Settings.Instance.DebugGetBestTarget) Logging.Log("Combat.KillTargets", "Activating Nos", Logging.Debug);
-                                ActivateNos(Cache.Instance.PreferredPrimaryWeaponTarget);
-                                if (Settings.Instance.DebugGetBestTarget) Logging.Log("Combat.KillTargets", "Activating Weapons", Logging.Debug);
-                                ActivateWeapons(Cache.Instance.PreferredPrimaryWeaponTarget);
-                                return;
+                                if (Cache.Instance.PreferredPrimaryWeaponTarget.Distance < Cache.Instance.MaxRange)
+                                {
+                                    if (Cache.Instance.PreferredPrimaryWeaponTarget.IsTarget)
+                                    {
+                                        if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "Activating Painters", Logging.Debug);
+                                        ActivateTargetPainters(Cache.Instance.PreferredPrimaryWeaponTarget);
+                                        if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "Activating Webs", Logging.Debug);
+                                        ActivateStasisWeb(Cache.Instance.PreferredPrimaryWeaponTarget);
+                                        if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "Activating Nos", Logging.Debug);
+                                        ActivateNos(Cache.Instance.PreferredPrimaryWeaponTarget);
+                                        if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "Activating Weapons", Logging.Debug);
+                                        ActivateWeapons(Cache.Instance.PreferredPrimaryWeaponTarget);
+                                        return;
+                                    }
+                                    
+                                    if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "if (Cache.Instance.PreferredPrimaryWeaponTarget.IsTarget) failed", Logging.Debug);
+                                }
+                                else
+                                {
+                                    if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "if (Cache.Instance.PreferredPrimaryWeaponTarget.Distance < Cache.Instance.MaxRange) failed", Logging.Debug);
+                                }
                             }
+                            else
+                            {
+                                if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "if (Cache.Instance.PreferredPrimaryWeaponTarget != null) failed", Logging.Debug);
+                            }
+                        }
+                        else
+                        {
+                            if (Settings.Instance.DebugKillTargets) Logging.Log("Combat.KillTargets", "if (Cache.Instance.Targets.Any()) failed", Logging.Debug);
                         }
                         break;
 
@@ -1360,7 +1380,7 @@ namespace Questor.Modules.Combat
             }
             catch (Exception exception)
             {
-                Logging.Log("Combat.ProcessState","Exception [" + exception + "]",Logging.Debug);    
+                Logging.Log("Combat.ProcessState", "Exception [" + exception + "]", Logging.Debug);
             }
         }
     }
