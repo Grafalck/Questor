@@ -143,7 +143,7 @@ namespace Questor
                 _readyToStart = true;
             }
 
-
+            /*
             #region Load ISXStealth
             //
             // IsxStealth
@@ -200,7 +200,8 @@ namespace Questor
             }
 
             #endregion Load IsxStealth
-
+            */
+              
             #region Load DirectEVE
             //
             // Load DirectEVE
