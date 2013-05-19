@@ -70,6 +70,8 @@ namespace Questor.Modules.Lookup
         //
         public bool DebugActivateGate { get; set; }
         public bool DebugActivateWeapons { get; set; }
+        public bool DebugAddDronePriorityTarget { get; set; }
+        public bool DebugAddPrimaryWeaponPriorityTarget { get; set; }
         public bool DebugAgentInteractionReplyToAgent { get; set; }
         public bool DebugAllMissionsOnBlackList { get; set; }
         public bool DebugAllMissionsOnGreyList { get; set; }
@@ -94,6 +96,7 @@ namespace Questor.Modules.Lookup
         public bool DebugGotobase { get; set; }
         public bool DebugGreyList { get; set; }
         public bool DebugHangars { get; set; }
+        public bool DebugHasExploded { get; set; }
         public bool DebugIdle { get; set; }
         public bool DebugInWarp { get; set; }
         public bool DebugItemHangar { get; set; }
@@ -620,6 +623,8 @@ namespace Questor.Modules.Lookup
                 Logging.Log("Settings", "WARNING! unable to find [" + Settings.Instance.CharacterSettingsPath + "] loading default generic, and likely incorrect, settings: WARNING!", Logging.Orange);
                 DebugActivateGate = false;
                 DebugActivateWeapons = false;
+                DebugAddDronePriorityTarget = false;
+                DebugAddPrimaryWeaponPriorityTarget = false;
                 DebugAgentInteractionReplyToAgent = false;
                 DebugAllMissionsOnBlackList = false;
                 DebugAllMissionsOnGreyList = false;
@@ -644,6 +649,7 @@ namespace Questor.Modules.Lookup
                 DebugGotobase = false;
                 DebugGreyList = false;
                 DebugHangars = false;
+                DebugHasExploded = false;
                 DebugIdle = false;
                 DebugInWarp = false;
                 DebugItemHangar = false;
@@ -1099,6 +1105,8 @@ namespace Questor.Modules.Lookup
                     //
                     DebugActivateGate = (bool?)CharacterSettingsXml.Element("debugActivateGate") ?? (bool?)CommonSettingsXml.Element("debugActivateGate") ?? false;
                     DebugActivateWeapons = (bool?)CharacterSettingsXml.Element("debugActivateWeapons") ?? (bool?)CommonSettingsXml.Element("debugActivateWeapons") ?? false;
+                    DebugAddDronePriorityTarget = (bool?)CharacterSettingsXml.Element("debugAddDronePriorityTarget") ?? (bool?)CommonSettingsXml.Element("debugAddDronePriorityTarget") ?? false;
+                    DebugAddPrimaryWeaponPriorityTarget = (bool?)CharacterSettingsXml.Element("debugAddPrimaryWeaponPriorityTarget") ?? (bool?)CommonSettingsXml.Element("debugAddPrimaryWeaponPriorityTarget") ?? false;
                     DebugAgentInteractionReplyToAgent = (bool?)CharacterSettingsXml.Element("debugAgentInteractionReplyToAgent") ?? (bool?)CommonSettingsXml.Element("debugAgentInteractionReplyToAgent") ?? false;
                     DebugAllMissionsOnBlackList = (bool?)CharacterSettingsXml.Element("debugAllMissionsOnBlackList") ?? (bool?)CommonSettingsXml.Element("debugAllMissionsOnBlackList") ?? false;
                     DebugAllMissionsOnGreyList = (bool?)CharacterSettingsXml.Element("debugAllMissionsOnGreyList") ?? (bool?)CommonSettingsXml.Element("debugAllMissionsOnGreyList") ?? false;
@@ -1123,6 +1131,7 @@ namespace Questor.Modules.Lookup
                     DebugGotobase = (bool?)CharacterSettingsXml.Element("debugGotobase") ?? (bool?)CommonSettingsXml.Element("debugGotobase") ?? false;
                     DebugGreyList = (bool?)CharacterSettingsXml.Element("debugGreyList") ?? (bool?)CommonSettingsXml.Element("debugGreyList") ?? false;
                     DebugHangars = (bool?)CharacterSettingsXml.Element("debugHangars") ?? (bool?)CommonSettingsXml.Element("debugHangars") ?? false;
+                    DebugHasExploded = (bool?)CharacterSettingsXml.Element("debugHasExploded") ?? (bool?)CommonSettingsXml.Element("debugHasExploded") ?? false;
                     DebugIdle = (bool?)CharacterSettingsXml.Element("debugIdle") ?? (bool?)CommonSettingsXml.Element("debugIdle") ?? false;
                     DebugInWarp = (bool?)CharacterSettingsXml.Element("debugInWarp") ?? (bool?)CommonSettingsXml.Element("debugInWarp") ?? false;
                     DebugItemHangar = (bool?)CharacterSettingsXml.Element("debugItemHangar") ?? (bool?)CommonSettingsXml.Element("debugItemHangar") ?? false;

@@ -291,6 +291,26 @@ namespace Questor.Modules.Caching
             }
         }
 
+        public bool IsEntityWeShouldKeepShooting
+        {
+            get
+            {
+                if (_directEntity != null)
+                {
+                    if ((_directEntity.IsTarget)
+                      && _directEntity.ArmorPct * 100 < Settings.Instance.DoNotSwitchTargetsIfTargetHasMoreThanThisArmorDamagePercentage
+                      && !Cache.Instance.IgnoreTargets.Contains(_directEntity.Name.Trim()))
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                return false;
+            }
+        }
+
         public bool IsReadyToNavigateToward
         {
             get
@@ -315,7 +335,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (!_directEntity.HasExploded && !_directEntity.IsTarget)
+                    if (!_directEntity.HasExploded && !_directEntity.IsTarget && !_directEntity.IsTargeting)
                     {
                         return true;
                     }
@@ -575,7 +595,6 @@ namespace Questor.Modules.Caching
             }
         }
 
-
         public bool IsPrimaryWeaponPriorityTarget
         {
             get
@@ -703,6 +722,99 @@ namespace Questor.Modules.Caching
 
                 return false;
             }
+        }
+
+        public bool IsActiveEwar()
+        {
+            bool result = false;
+            result |= IsWarpScramblingMe;
+            result |= IsWebbingMe;
+            result |= IsNeutralizingMe;
+            result |= IsJammingMe;
+            result |= IsSensorDampeningMe;
+            result |= IsTargetPaintingMe;
+            result |= IsTrackingDisruptingMe;
+            return result;
+        }
+
+        public DronePriority IsActiveDroneEwarType()
+        {
+            if (IsWarpScramblingMe)
+            {
+                return DronePriority.WarpScrambler;
+            }
+
+            if (IsWebbingMe)
+            {
+                return DronePriority.Webbing;
+            }
+
+            if (IsNeutralizingMe)
+            {
+                return DronePriority.PriorityKillTarget;
+            }
+
+            if (IsJammingMe)
+            {
+                return DronePriority.PriorityKillTarget;
+            }
+
+            if (IsSensorDampeningMe)
+            {
+                return DronePriority.PriorityKillTarget;
+            }
+
+            if (IsTargetPaintingMe)
+            {
+                return DronePriority.PriorityKillTarget;
+            }
+
+            if (IsTrackingDisruptingMe)
+            {
+                return DronePriority.PriorityKillTarget;
+            }
+            
+            return DronePriority.NotUsed;
+        }
+
+        public PrimaryWeaponPriority IsActivePrimaryWeaponEwarType()
+        {
+            if (IsWarpScramblingMe)
+            {
+                return PrimaryWeaponPriority.WarpScrambler;
+            }
+
+            if (IsWebbingMe)
+            {
+                return PrimaryWeaponPriority.Webbing;
+            }
+
+            if (IsNeutralizingMe)
+            {
+                return PrimaryWeaponPriority.Neutralizing;
+            }
+
+            if (IsJammingMe)
+            {
+                return PrimaryWeaponPriority.Jamming;
+            }
+
+            if (IsSensorDampeningMe)
+            {
+                return PrimaryWeaponPriority.Dampening;
+            }
+
+            if (IsTargetPaintingMe)
+            {
+                return PrimaryWeaponPriority.TargetPainting;
+            }
+
+            if (IsTrackingDisruptingMe)
+            {
+                return PrimaryWeaponPriority.TrackingDisrupting;
+            }
+
+            return PrimaryWeaponPriority.NotUsed;
         }
 
         public bool IsWarpScramblingMe
@@ -957,7 +1069,10 @@ namespace Questor.Modules.Caching
                 if (_directEntity == null)
                     return false;
 
-                return _directEntity.IsValid;
+                if (!HasExploded)
+                    return _directEntity.IsValid;
+
+                return false;
             }
         }
 
