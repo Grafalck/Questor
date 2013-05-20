@@ -307,11 +307,10 @@ namespace Questor.Modules.Activities
             if (!Cache.Instance.NormalApproach) Cache.Instance.NormalApproach = true;
 
             // Get lowest range
-            double range = (double)Distances.OnGridWithMe;
             int DistanceToClear;
             if (!int.TryParse(action.GetParameterValue("distance"), out DistanceToClear))
             {
-                DistanceToClear = (int)range;
+                DistanceToClear = (int)Distances.OnGridWithMe;
             }
 
             if (DistanceToClear != 0 && DistanceToClear != -2147483648 && DistanceToClear != 2147483647)
@@ -319,8 +318,8 @@ namespace Questor.Modules.Activities
                 DistanceToClear = (int)Distances.OnGridWithMe;
             }
 
-            if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat", Cache.Instance.potentialCombatTargets.Where(t => t.IsTargetedBy).ToList())
-                || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones", Cache.Instance.potentialCombatTargets.Where(t => t.IsTargetedBy).ToList()))
+            if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat", Cache.Instance.combatTargets.Where(t => t.IsTargetedBy).ToList())
+                || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones", Cache.Instance.combatTargets.Where(t => t.IsTargetedBy).ToList()))
                 _clearPocketTimeout = null;
 
             // Do we have a timeout?  No, set it to now + 5 seconds
@@ -344,11 +343,10 @@ namespace Questor.Modules.Activities
             }
 
             // Get lowest range
-            double range = Cache.Instance.MaxRange;
             int DistanceToClear;
             if (!int.TryParse(action.GetParameterValue("distance"), out DistanceToClear))
             {
-                DistanceToClear = (int)range;
+                DistanceToClear = (int)Cache.Instance.MaxRange;
             }
 
             if (DistanceToClear != 0 && DistanceToClear != -2147483648 && DistanceToClear != 2147483647)
@@ -466,9 +464,31 @@ namespace Questor.Modules.Activities
                 AddPriorityKillTargetsAndMoveIntoRangeAsNeeded(targets, DistanceToClear, targetedby, true);
             }*/
             #endregion
-            if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat") || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones"))
-                _clearPocketTimeout = null;
 
+            //If the closest target is out side of our max range, combat cant target, which means GetBest cant return true, so we are going to try and use potentialCombatTargets instead
+            /*if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat") || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones"))
+                _clearPocketTimeout = null;*/
+            if (Cache.Instance.potentialCombatTargets.Any(t => !Cache.Instance.IgnoreTargets.Contains(t.Name.Trim())))
+            {
+                //we may be too far out of range of the closest target to get combat to kick in, lets move us into range here
+                if (Cache.Instance.potentialCombatTargets.OrderBy(t => t.Nearest5kDistance).FirstOrDefault().Distance > Cache.Instance.MaxRange)
+                {
+                    if (!Cache.Instance.IsApproachingOrOrbiting(Cache.Instance.potentialCombatTargets.OrderBy(t => t.Distance).FirstOrDefault().Id))
+                    {
+                        NavigateOnGrid.NavigateIntoRange(Cache.Instance.potentialCombatTargets.OrderBy(t => t.Distance).FirstOrDefault(), "combatMissionControl", true);
+                    }
+                }
+                else
+                {
+                    Cache.Instance.GetBestTarget(DistanceToClear, false, "combat");
+                    if (Cache.Instance.UseDrones)
+                        Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones");
+                }
+                _clearPocketTimeout = null;
+            }
+            //Cache.Instance.AddPrimaryWeaponPriorityTargets(Cache.Instance.potentialCombatTargets.Where(t => targetNames.Contains(t.Name)).OrderBy(t => t.Distance).ToList(), PrimaryWeaponPriority.PriorityKillTarget, "CombatMissionCtrl.KillClosestByName");
+            
+            
             // Do we have a timeout?  No, set it to now + 5 seconds
             if (!_clearPocketTimeout.HasValue) _clearPocketTimeout = DateTime.UtcNow.AddSeconds(5);
 
@@ -486,11 +506,10 @@ namespace Questor.Modules.Activities
         private void ClearWithinWeaponsRangeOnlyAction(Actions.Action action)
         {
             // Get lowest range
-            double range = Cache.Instance.MaxRange;
             int DistanceToClear;
             if (!int.TryParse(action.GetParameterValue("distance"), out DistanceToClear))
             {
-                DistanceToClear = (int)range;
+                DistanceToClear = (int)Cache.Instance.MaxRange;
             }
 
             if (DistanceToClear != 0 && DistanceToClear != -2147483648 && DistanceToClear != 2147483647)
@@ -530,12 +549,10 @@ namespace Questor.Modules.Activities
             }
 
             // Get lowest range
-            double DistanceToConsiderTargets = Cache.Instance.MaxRange;
-
             int DistanceToClear;
             if (!int.TryParse(action.GetParameterValue("distance"), out DistanceToClear))
             {
-                DistanceToClear = (int)DistanceToConsiderTargets;
+                DistanceToClear = (int)Cache.Instance.MaxRange;
             }
 
             if (DistanceToClear != 0 && DistanceToClear != -2147483648 && DistanceToClear != 2147483647)
@@ -546,8 +563,8 @@ namespace Questor.Modules.Activities
             //
             // the important bit is here... Adds target to the PrimaryWeapon or Drone Priority Target Lists so that they get killed (we basically wait for combat.cs to do that before proceeding)
             //
-            if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat", Cache.Instance.potentialCombatTargets.Where(t => t.IsTargetedBy).ToList())
-                    || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones", Cache.Instance.potentialCombatTargets.Where(t => t.IsTargetedBy).ToList()))
+            if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat", Cache.Instance.combatTargets.Where(t => t.IsTargetedBy).ToList())
+                    || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones", Cache.Instance.combatTargets.Where(t => t.IsTargetedBy).ToList()))
                 _clearPocketTimeout = null;
 
             // Do we have a timeout?  No, set it to now + 5 seconds
@@ -879,12 +896,10 @@ namespace Questor.Modules.Activities
             }
 
             // Get lowest range
-            double DistanceToConsiderTargets = (double) Distances.OnGridWithMe;
-
             int DistanceToClear;
             if (!int.TryParse(action.GetParameterValue("distance"), out DistanceToClear))
             {
-                DistanceToClear = (int)DistanceToConsiderTargets;
+                DistanceToClear = (int)Distances.OnGridWithMe;
             }
 
             if (DistanceToClear != 0 && DistanceToClear != -2147483648 && DistanceToClear != 2147483647)
@@ -895,8 +910,8 @@ namespace Questor.Modules.Activities
             //
             // the important bit is here... Adds target to the PrimaryWeapon or Drone Priority Target Lists so that they get killed (we basically wait for combat.cs to do that before proceeding)
             //
-            if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat", Cache.Instance.potentialCombatTargets.Where(t => t.IsTargetedBy).ToList())
-                    || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones", Cache.Instance.potentialCombatTargets.Where(t => t.IsTargetedBy).ToList()))
+            if (Cache.Instance.GetBestTarget(DistanceToClear, false, "combat", Cache.Instance.combatTargets.Where(t => t.IsTargetedBy).ToList())
+                    || Cache.Instance.GetBestDroneTarget(DistanceToClear, false, "Drones", Cache.Instance.combatTargets.Where(t => t.IsTargetedBy).ToList()))
                 _clearPocketTimeout = null;
 
             // Do we have a timeout?  No, set it to now + 5 seconds
@@ -973,7 +988,13 @@ namespace Questor.Modules.Activities
             if (ignoreAttackers)
             {
                 foreach (EntityCache target in Cache.Instance.potentialCombatTargets)
-                    Cache.Instance.IgnoreTargets.Add(target.Name.Trim());
+                {
+                    if (target.IsTargetedBy && target.IsAttacking)
+                    {
+                        Logging.Log("CombatMissionCtrl." + _pocketActions[_currentAction], "Ignoring [" + target.Name + "][ID: " + Cache.Instance.MaskedID(target.Id) + "][" + Math.Round(target.Distance / 1000, 0) + "k away] due to ignoreAttackers paramater", Logging.Teal);
+                        Cache.Instance.IgnoreTargets.Add(target.Name.Trim());    
+                    }
+                }
             }
 
             if (breakOnAttackers && Cache.Instance.TargetedBy.Count(t => !t.IsSentry) > killTargets.Count())
@@ -994,10 +1015,23 @@ namespace Questor.Modules.Activities
                 Cache.Instance.IgnoreTargets.RemoveWhere(targetNames.Contains);
             }
 
+            Cache.Instance.AddPrimaryWeaponPriorityTargets(Cache.Instance.potentialCombatTargets.Where(t => targetNames.Contains(t.Name)).OrderBy(t => t.Distance).ToList(), PrimaryWeaponPriority.PriorityKillTarget, "CombatMissionCtrl.KillClosestByName");
+            
+            //we may need to get closer so combat will take over
+            if (killTargets.OrderBy(t => t.Nearest5kDistance).FirstOrDefault().Distance > Cache.Instance.MaxRange)
+            {
+                if (!Cache.Instance.IsApproachingOrOrbiting(killTargets.OrderBy(t => t.Nearest5kDistance).FirstOrDefault().Id))
+                {
+                    NavigateOnGrid.NavigateIntoRange(killTargets.OrderBy(t => t.Nearest5kDistance).FirstOrDefault(), "combatMissionControl", true);
+                }
+            }
+
             // GetTargets
             Cache.Instance.GetBestTarget((int)Distances.OnGridWithMe, false, "combat", killTargets.ToList());
             if (Cache.Instance.UseDrones)
+            {
                 Cache.Instance.GetBestDroneTarget((int)Distances.OnGridWithMe, false, "Drones", killTargets.ToList());
+            }
 
             // Don't use NextAction here, only if target is killed (checked further up)
             return;
@@ -1027,6 +1061,12 @@ namespace Questor.Modules.Activities
 
         private void KillClosestByNameAction(Actions.Action action)
         {
+            bool notTheClosest;
+            if (!bool.TryParse(action.GetParameterValue("notclosest"), out notTheClosest))
+            {
+                notTheClosest = false;
+            }
+
             if (Cache.Instance.NormalApproach) Cache.Instance.NormalApproach = false;
 
             List<string> targetNames = action.GetParameterValues("target");
@@ -1039,6 +1079,12 @@ namespace Questor.Modules.Activities
                 return;
             }
 
+            //
+            // the way this is currently written is will NOT stop after killing the first target as intended, it will clear all targets with the Name given
+            //
+
+            Cache.Instance.AddPrimaryWeaponPriorityTarget(Cache.Instance.potentialCombatTargets.Where(t => targetNames.Contains(t.Name)).OrderBy(t => t.Distance).Take(1).FirstOrDefault(),PrimaryWeaponPriority.PriorityKillTarget, "CombatMissionCtrl.KillClosestByName");
+            
             if (Cache.Instance.GetBestTarget((double)Distances.OnGridWithMe, false, "combat", Cache.Instance.potentialCombatTargets.Where(t => targetNames.Contains(t.Name)).OrderBy(t => t.Distance).Take(1).ToList())
                 || Cache.Instance.GetBestDroneTarget((double)Distances.OnGridWithMe, false, "Drones", Cache.Instance.potentialCombatTargets.Where(t => targetNames.Contains(t.Name)).OrderBy(t => t.Distance).Take(1).ToList()))
                 _clearPocketTimeout = null;
@@ -1060,6 +1106,15 @@ namespace Questor.Modules.Activities
         private void KillClosestAction(Actions.Action action)
         {
             if (Cache.Instance.NormalApproach) Cache.Instance.NormalApproach = false;
+
+            bool notTheClosest;
+            if (!bool.TryParse(action.GetParameterValue("notclosest"), out notTheClosest))
+            {
+                notTheClosest = false;
+            }
+            //
+            // the way this is currently written is will NOT stop after killing the first target as intended, it will clear all targets with the Name given, in this everything on grid
+            //
 
             if (Cache.Instance.GetBestTarget((double)Distances.OnGridWithMe, false, "combat", Cache.Instance.potentialCombatTargets.OrderBy(t => t.Distance).Take(1).ToList())
                 || Cache.Instance.GetBestDroneTarget((double)Distances.OnGridWithMe, false, "Drones", Cache.Instance.potentialCombatTargets.OrderBy(t => t.Distance).Take(1).ToList()))
@@ -1142,23 +1197,26 @@ namespace Questor.Modules.Activities
                         }
 
                         // Get the container that is associated with the cargo container
-                        DirectContainer container = Cache.Instance.DirectEve.GetContainer(closest.Id);
-
-                        DirectItem itemsToMove = cargo.Items.FirstOrDefault(i => i.TypeName.ToLower() == items.FirstOrDefault().ToLower());
-                        if (itemsToMove != null)
+                        if (closest != null)
                         {
-                            Logging.Log("MissionController.DropItem", "Moving Items: " + items.FirstOrDefault() + " from cargo ship to " + container.TypeName, Logging.White);
-                            container.Add(itemsToMove, quantity);
+                            DirectContainer container = Cache.Instance.DirectEve.GetContainer(closest.Id);
 
-                            done = container.Items.Any(i => i.TypeName.ToLower() == items.FirstOrDefault().ToLower() && (i.Quantity >= quantity));
-                            Cache.Instance.NextOpenContainerInSpaceAction = DateTime.UtcNow.AddSeconds(Cache.Instance.RandomNumber(4, 6));
-                        }
-                        else
-                        {
-                            Logging.Log("MissionController.DropItem", "Error not found Items", Logging.White);
-                            Cache.Instance.DropMode = false;
-                            Nextaction();
-                            return;
+                            DirectItem itemsToMove = cargo.Items.FirstOrDefault(i => i.TypeName.ToLower() == items.FirstOrDefault().ToLower());
+                            if (itemsToMove != null)
+                            {
+                                Logging.Log("MissionController.DropItem", "Moving Items: " + items.FirstOrDefault() + " from cargo ship to " + container.TypeName, Logging.White);
+                                container.Add(itemsToMove, quantity);
+
+                                done = container.Items.Any(i => i.TypeName.ToLower() == items.FirstOrDefault().ToLower() && (i.Quantity >= quantity));
+                                Cache.Instance.NextOpenContainerInSpaceAction = DateTime.UtcNow.AddSeconds(Cache.Instance.RandomNumber(4, 6));
+                            }
+                            else
+                            {
+                                Logging.Log("MissionController.DropItem", "Error not found Items", Logging.White);
+                                Cache.Instance.DropMode = false;
+                                Nextaction();
+                                return;
+                            }
                         }
                     }
                 }
@@ -1673,7 +1731,6 @@ namespace Questor.Modules.Activities
                         {
                             action = _pocketActions[_currentAction];
                             Logging.Log("CombatMissionCtrl", "Starting Action." + action, Logging.Yellow);
-                            
                         }
                     }
 

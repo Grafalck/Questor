@@ -195,7 +195,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (!_directEntity.HasExploded)
+                    if (!_directEntity.HasExploded && Cache.Instance.Entities.Any(t => t.Id == _directEntity.Id))
                     {
                         return _directEntity.IsTarget;    
                     }
@@ -274,11 +274,16 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (!_directEntity.HasExploded && _directEntity.IsTarget)
+                    if (!HasExploded && IsTarget)
                     {
                         if (_directEntity.Distance < Cache.Instance.MaxRange)
                         {
-                            return true;
+                            if (Cache.Instance.Entities.Any(t => t.Id == _directEntity.Id))
+                            {
+                                return true;
+                            }
+
+                            return false; 
                         }
 
                         return false;
@@ -297,7 +302,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if ((_directEntity.IsTarget)
+                    if ((IsTarget)
                       && _directEntity.ArmorPct * 100 < Settings.Instance.DoNotSwitchTargetsIfTargetHasMoreThanThisArmorDamagePercentage
                       && !Cache.Instance.IgnoreTargets.Contains(_directEntity.Name.Trim()))
                     {
@@ -317,7 +322,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (!_directEntity.HasExploded && _directEntity.IsTarget)
+                    if (!HasExploded && IsTarget)
                     {
                         return true;
                     }
@@ -335,7 +340,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (!_directEntity.HasExploded && !_directEntity.IsTarget && !_directEntity.IsTargeting)
+                    if (!HasExploded && !IsTarget && !IsTargeting)
                     {
                         return true;
                     }
@@ -377,7 +382,7 @@ namespace Questor.Modules.Caching
 
                             return false;
                         }
-                        
+
                         if (Cache.Instance.DronePriorityTargets.Any())
                         {
                             if (Cache.Instance.DronePriorityTargets.Any(pt => pt.Id == _directEntity.Id))
@@ -479,7 +484,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (_directEntity.IsTarget)
+                    if (IsTarget)
                     {
                         return _directEntity.IsActiveTarget;        
                     }
@@ -511,16 +516,16 @@ namespace Questor.Modules.Caching
                         {
                             optimal = Cache.Instance.OptimalRange;
                         }
-                        else /*if (Settings.Instance.OptimalRange != 0)*/ //do we really need this condition? we cant even get in here if one of them isnt != 0
+                        else if (Settings.Instance.OptimalRange != 0) //do we really need this condition? we cant even get in here if one of them isnt != 0, that is the idea, if its 0 we sure as hell dont want to use it as the optimal
                         {
                             optimal = Settings.Instance.OptimalRange;
                         }
 
                         if (Cache.Instance.DoWeCurrentlyHaveTurretsMounted()) //Lasers, Projectile, and Hybrids
                         {
-                            if (_directEntity.Distance > Settings.Instance.InsideThisRangeIsHardToTrack)
+                            if (Distance > Settings.Instance.InsideThisRangeIsHardToTrack)
                             {
-                                if (_directEntity.Distance < (optimal * 1.5))
+                                if (Distance < (optimal * 1.5))
                                 {
                                     return true;
                                 }
@@ -529,7 +534,7 @@ namespace Questor.Modules.Caching
                         else //missile boats - use max range
                         {
                             optimal = Cache.Instance.MaxRange;
-                            if (_directEntity.Distance < optimal)
+                            if (Distance < optimal)
                             {
                                 return true;
                             }
@@ -538,8 +543,8 @@ namespace Questor.Modules.Caching
                         return false;
                     }
 
-                    // If we cant determine optimal, how can we say that the entity is within it?
-                    return false;
+                    // If you have no optimal you have to assume the entity is within Optimal... (like missiles)
+                    return true;
                 }
 
                 return false;
@@ -552,7 +557,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (Cache.Instance.DronePriorityTargets.All(i => i.Id != _directEntity.Id))
+                    if (Cache.Instance.DronePriorityTargets.All(i => i.Id != Id))
                     {
                         return false;
                     }
@@ -570,7 +575,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (Cache.Instance.PrimaryWeaponPriorityTargets.Any(pt => pt.Id == _directEntity.Id))
+                    if (Cache.Instance.PrimaryWeaponPriorityTargets.Any(pt => pt.Id == Id))
                     {
                         EntityCache __entity = new EntityCache(_directEntity);
                         if (__entity.PrimaryWeaponPriorityLevel == PrimaryWeaponPriority.WarpScrambler)
@@ -579,7 +584,7 @@ namespace Questor.Modules.Caching
                         }
                     }
 
-                    if (Cache.Instance.DronePriorityTargets.Any(pt => pt.Id == _directEntity.Id))
+                    if (Cache.Instance.DronePriorityTargets.Any(pt => pt.Id == Id))
                     {
                         EntityCache __entity = new EntityCache(_directEntity);
                         if (__entity.DronePriorityLevel == DronePriority.WarpScrambler)
@@ -601,7 +606,7 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (Cache.Instance.PrimaryWeaponPriorityTargets.All(i => i.Id != _directEntity.Id))
+                    if (Cache.Instance.PrimaryWeaponPriorityTargets.All(i => i.Id != Id))
                     {
                         return false;
                     }
@@ -619,10 +624,10 @@ namespace Questor.Modules.Caching
             {
                 if (_directEntity != null)
                 {
-                    if (Cache.Instance.PrimaryWeaponPriorityTargets.Any(pt => pt.Id == _directEntity.Id))
+                    if (Cache.Instance.PrimaryWeaponPriorityTargets.Any(pt => pt.Id == Id))
                     {
                         PrimaryWeaponPriority currentTargetPriority = Cache.Instance._primaryWeaponPriorityTargets.Where(t => t.Entity.IsTarget
-                                                                                                                           && t.EntityID == _directEntity.Id)
+                                                                                                                           && t.EntityID == Id)
                                                                                                                   .Select(pt => pt.PrimaryWeaponPriority)
                                                                                                                   .FirstOrDefault();
                         return currentTargetPriority;
@@ -644,7 +649,7 @@ namespace Questor.Modules.Caching
                     if (Cache.Instance._dronePriorityTargets.Any(pt => pt.EntityID == _directEntity.Id))
                     {
                         DronePriority currentTargetPriority = Cache.Instance._dronePriorityTargets.Where(t => t.Entity.IsTarget
-                                                                                                                  && t.EntityID == _directEntity.Id)
+                                                                                                                  && t.EntityID == Id)
                                                                                                                   .Select(pt => pt.DronePriority)
                                                                                                                   .FirstOrDefault();
 
@@ -847,15 +852,15 @@ namespace Questor.Modules.Caching
                 {
                     if (_directEntity.Attacks.Contains("effects.ModifyTargetSpeed"))
                     {
-                        if (!Cache.Instance.Webbing.Contains(_directEntity.Id)) Cache.Instance.Webbing.Add(_directEntity.Id);
+                        if (!Cache.Instance.Webbing.Contains(Id)) Cache.Instance.Webbing.Add(Id);
                         return true;
                     }
-                    else
+                    
+                    if (Cache.Instance.Webbing.Contains(Id))
                     {
-                        if (Cache.Instance.Webbing.Contains(_directEntity.Id))
-                            return true;
-                        return false;
+                        return true;
                     }
+                    
                 }
                 return false;
             }
@@ -869,16 +874,16 @@ namespace Questor.Modules.Caching
                 {
                     if (_directEntity.ElectronicWarfare.Contains("ewEnergyNeut"))
                     {
-                        if (!Cache.Instance.Neuting.Contains(_directEntity.Id)) Cache.Instance.Neuting.Add(_directEntity.Id);
+                        if (!Cache.Instance.Neuting.Contains(Id)) Cache.Instance.Neuting.Add(Id);
                         return true;
                     }
-                    else
+                    
+                    if (Cache.Instance.Neuting.Contains(Id))
                     {
-                        if (Cache.Instance.Neuting.Contains(_directEntity.Id))
-                            return true;
-                        return false;
+                        return true;
                     }
                 }
+
                 return false;
             }
         }
@@ -891,16 +896,16 @@ namespace Questor.Modules.Caching
                 {
                     if (_directEntity.ElectronicWarfare.Contains("electronic"))
                     {
-                        if (!Cache.Instance.Jammer.Contains(_directEntity.Id)) Cache.Instance.Jammer.Add(_directEntity.Id);
+                        if (!Cache.Instance.Jammer.Contains(Id)) Cache.Instance.Jammer.Add(Id);
                         return true;
                     }
-                    else
+                    
+                    if (Cache.Instance.Jammer.Contains(Id))
                     {
-                        if (Cache.Instance.Jammer.Contains(_directEntity.Id))
-                            return true;
-                        return false;
+                        return true;
                     }
                 }
+
                 return false;
             }
         }
@@ -913,16 +918,16 @@ namespace Questor.Modules.Caching
                 {
                     if (_directEntity.ElectronicWarfare.Contains("ewRemoteSensorDamp"))
                     {
-                        if (!Cache.Instance.Dampening.Contains(_directEntity.Id)) Cache.Instance.Dampening.Add(_directEntity.Id);
+                        if (!Cache.Instance.Dampening.Contains(Id)) Cache.Instance.Dampening.Add(Id);
                         return true;
                     }
-                    else
+                    
+                    if (Cache.Instance.Dampening.Contains(Id))
                     {
-                        if (Cache.Instance.Dampening.Contains(_directEntity.Id))
-                            return true;
-                        return false;
+                        return true;
                     }
                 }
+
                 return false;
             }
         }
@@ -935,16 +940,16 @@ namespace Questor.Modules.Caching
                 {
                     if (_directEntity.ElectronicWarfare.Contains("ewTargetPaint"))
                     {
-                        if (!Cache.Instance.TargetPainting.Contains(_directEntity.Id)) Cache.Instance.TargetPainting.Add(_directEntity.Id);
+                        if (!Cache.Instance.TargetPainting.Contains(Id)) Cache.Instance.TargetPainting.Add(Id);
                         return true;
                     }
-                    else
+                    
+                    if (Cache.Instance.TargetPainting.Contains(Id))
                     {
-                        if (Cache.Instance.TargetPainting.Contains(_directEntity.Id))
-                            return true;
-                        return false;
+                        return true;
                     }
                 }
+
                 return false;
             }
         }
@@ -957,16 +962,16 @@ namespace Questor.Modules.Caching
                 {
                     if (_directEntity.ElectronicWarfare.Contains("ewTrackingDisrupt"))
                     {
-                        if (!Cache.Instance.TrackingDisrupter.Contains(_directEntity.Id)) Cache.Instance.TrackingDisrupter.Add(_directEntity.Id);
+                        if (!Cache.Instance.TrackingDisrupter.Contains(Id)) Cache.Instance.TrackingDisrupter.Add(Id);
                         return true;
                     }
-                    else
+                    
+                    if (Cache.Instance.TrackingDisrupter.Contains(Id))
                     {
-                        if (Cache.Instance.TrackingDisrupter.Contains(_directEntity.Id))
-                            return true;
-                        return false;
+                        return true;
                     }
                 }
+
                 return false;
             }
         }
@@ -976,7 +981,9 @@ namespace Questor.Modules.Caching
             get
             {
                 if (_directEntity != null)
-                    return (int)((_directEntity.ShieldPct + _directEntity.ArmorPct + _directEntity.StructurePct) * 100);
+                {
+                    return (int)((ShieldPct + ArmorPct + StructurePct) * 100);
+                }
 
                 return 0;
             }
@@ -1067,10 +1074,14 @@ namespace Questor.Modules.Caching
             get
             {
                 if (_directEntity == null)
+                {
                     return false;
+                }
 
                 if (!HasExploded)
+                {
                     return _directEntity.IsValid;
+                }
 
                 return false;
             }
@@ -1441,6 +1452,11 @@ namespace Questor.Modules.Caching
         {
             get
             {
+                if (Cache.Instance.Entities.Any(t => t.Id != Id))
+                {
+                    return false;
+                }
+
                 bool result = false;
                 result |= GroupId == (int)Group.ConcordDrone;
                 result |= GroupId == (int)Group.PoliceDrone;
@@ -1766,23 +1782,28 @@ namespace Questor.Modules.Caching
             // Only add targeting id's when its actually being targeted
             if (_directEntity != null)
             {
-                if (!_directEntity.IsTarget)
+                if (!IsTarget)
                 {
-                    if (!_directEntity.HasExploded)
+                    if (!HasExploded)
                     {
-                        if (_directEntity.Distance < Cache.Instance.DirectEve.ActiveShip.MaxTargetRange)
+                        if (Distance < Cache.Instance.DirectEve.ActiveShip.MaxTargetRange)
                         {
                             if (Cache.Instance.Targets.Count() < Cache.Instance.DirectEve.ActiveShip.MaxLockedTargets)
                             {
-                                if (!_directEntity.IsTargeting)
+                                if (!IsTargeting)
                                 {
-                                    if (_directEntity.LockTarget())
+                                    if (Cache.Instance.Entities.Any(i => i.Id == Id))
                                     {
-                                        Cache.Instance.TargetingIDs[Id] = DateTime.UtcNow;
-                                        return true;
+                                        if (_directEntity.LockTarget())
+                                        {
+                                            Cache.Instance.TargetingIDs[Id] = DateTime.UtcNow;
+                                            return true;
+                                        }
+
+                                        Logging.Log("EntityCache.LockTarget", "[" + module + "] tried to lock [" + Name + "][" + Math.Round(Distance / 1000, 2) + "k][" + Cache.Instance.MaskedID(Id) + "][" + Cache.Instance.Targets.Count() + "] targets already, LockTarget failed (unknown reason)", Logging.White);
                                     }
 
-                                    Logging.Log("EntityCache.LockTarget", "[" + module + "] tried to lock [" + Name + "][" + Math.Round(Distance / 1000, 2) + "k][" + Cache.Instance.MaskedID(Id) + "][" + Cache.Instance.Targets.Count() + "] targets already, LockTarget failed (unknown reason)", Logging.White);
+                                    Logging.Log("EntityCache.LockTarget", "[" + module + "] tried to lock [" + Name + "][" + Math.Round(Distance / 1000, 2) + "k][" + Cache.Instance.MaskedID(Id) + "][" + Cache.Instance.Targets.Count() + "] targets already, LockTarget failed: target was not in Entities List", Logging.White);
                                 }
 
                                 Logging.Log("EntityCache.LockTarget", "[" + module + "] tried to lock [" + Name + "][" + Math.Round(Distance / 1000, 2) + "k][" + Cache.Instance.MaskedID(Id) + "][" + Cache.Instance.Targets.Count() + "] targets already, LockTarget aborted: target is already being targeted", Logging.White);
@@ -1809,7 +1830,7 @@ namespace Questor.Modules.Caching
 
                 return false;
             }
-            
+
             return false;
         }
 
@@ -1824,7 +1845,7 @@ namespace Questor.Modules.Caching
 
                 Cache.Instance.TargetingIDs.Remove(Id);
 
-                if (_directEntity.IsTarget)
+                if (IsTarget)
                 {
                     _directEntity.UnlockTarget();
                     return true;
@@ -1939,7 +1960,7 @@ namespace Questor.Modules.Caching
         {
             if (_directEntity != null)
             {
-                if (_directEntity.IsTarget)
+                if (IsTarget)
                 {
                     _directEntity.MakeActiveTarget();    
                 }
